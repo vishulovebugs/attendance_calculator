@@ -6,6 +6,7 @@ import LoginScreen from './screens/LoginScreen'
 import OnboardingScreen from './screens/OnboardingScreen'
 import DashboardScreen from './screens/DashboardScreen'
 import SettingsScreen from './screens/SettingsScreen'
+import EditTimetableScreen from './screens/EditTimetableScreen'
 
 function LoadingScreen({ label }: { label: string }) {
   return (
@@ -22,7 +23,7 @@ function App() {
   const { profile, loading } = useProfile(user?.uid ?? null)
   const [localProfile, setLocalProfile] = useState<UserProfile | null>(null)
   const [authError, setAuthError] = useState<string | null>(null)
-  const [view, setView] = useState<'dashboard' | 'settings'>('dashboard')
+  const [view, setView] = useState<'dashboard' | 'settings' | 'timetable'>('dashboard')
 
   useEffect(() => {
     if (user) {
@@ -68,10 +69,21 @@ function App() {
     return <SettingsScreen onBack={() => setView('dashboard')} />
   }
 
+  if (view === 'timetable') {
+    return (
+      <EditTimetableScreen
+        uid={user.uid}
+        group={activeProfile.group}
+        onBack={() => setView('dashboard')}
+      />
+    )
+  }
+
   return (
     <DashboardScreen
       profile={activeProfile}
       onOpenSettings={() => setView('settings')}
+      onOpenTimetable={() => setView('timetable')}
     />
   )
 }
