@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { AcademicCalendar } from '../data/calendar'
 import type { AttendanceRecord } from '../lib/attendance'
-import { getAttendance } from '../lib/attendance'
-import { getAcademicCalendar } from '../lib/configStore'
+import { onAttendanceSnapshot } from '../lib/attendance'
+import { onAcademicCalendarSnapshot } from '../lib/configStore'
 import {
   attendancePercent,
   attendanceTotals,
@@ -115,21 +115,41 @@ export default function StatsScreen({ uid, onBack }: StatsScreenProps) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    let received = 0
     let cancelled = false
-    Promise.all([getAttendance(uid), getAcademicCalendar()])
-      .then(([attended, cal]) => {
-        if (cancelled) return
-        setRecords(attended)
-        setCalendar(cal)
-      })
-      .catch(() => {
-        if (!cancelled) setError('Failed to load stats')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
+    const markReceived = () => {
+      received++
+      if (!cancelled && received >= 2) setLoading(false)
+    }
+    const fail = () => {
+      if (!cancelled) {
+        setError('Failed to load stats')
+        setLoading(false)
+      }
+    }
+    const unsubAttendance = onAttendanceSnapshot(
+      uid,
+      (attended) => {
+        if (!cancelled) {
+          setRecords(attended)
+          markReceived()
+        }
+      },
+      fail,
+    )
+    const unsubCalendar = onAcademicCalendarSnapshot(
+      (cal) => {
+        if (!cancelled) {
+          setCalendar(cal)
+          markReceived()
+        }
+      },
+      fail,
+    )
     return () => {
       cancelled = true
+      unsubAttendance()
+      unsubCalendar()
     }
   }, [uid])
 

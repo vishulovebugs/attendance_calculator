@@ -9,7 +9,23 @@ import SettingsScreen from './SettingsScreen'
 
 const firestoreState = vi.hoisted(() => {
   const store = new Map<string, unknown>()
-  return { store }
+  return {
+    store,
+    snapshotFor(ref: { path: string; kind?: string }) {
+      if (ref.kind === 'doc') {
+        return {
+          exists: () => store.has(ref.path),
+          data: () => store.get(ref.path),
+        }
+      }
+      const prefix = `${ref.path}/`
+      return {
+        docs: [...store.entries()]
+          .filter(([p]) => p.startsWith(prefix))
+          .map(([p, data]) => ({ id: p.slice(prefix.length), data: () => data })),
+      }
+    },
+  }
 })
 
 vi.mock('firebase/app', () => ({ initializeApp: vi.fn(() => ({})) }))
@@ -18,23 +34,20 @@ vi.mock('firebase/firestore', () => ({
   getFirestore: vi.fn(() => ({})),
   collection: vi.fn((_db: unknown, ...segments: string[]) => ({
     path: segments.join('/'),
+    kind: 'collection',
   })),
   doc: vi.fn((_db: unknown, ...segments: string[]) => ({
     path: segments.join('/'),
+    kind: 'doc',
   })),
-  getDoc: vi.fn(async (ref: { path: string }) => ({
-    exists: () => firestoreState.store.has(ref.path),
-    data: () => firestoreState.store.get(ref.path),
-  })),
-  getDocs: vi.fn(async (ref: { path: string }) => {
-    const prefix = `${ref.path}/`
-    const docs = [...firestoreState.store.entries()]
-      .filter(([p]) => p.startsWith(prefix))
-      .map(([p, data]) => ({ id: p.slice(prefix.length), data: () => data }))
-    return { docs }
-  }),
+  getDoc: vi.fn(async (ref: { path: string }) => firestoreState.snapshotFor(ref)),
+  getDocs: vi.fn(async (ref: { path: string }) => firestoreState.snapshotFor(ref)),
   setDoc: vi.fn(async (ref: { path: string }, data: unknown) => {
     firestoreState.store.set(ref.path, data)
+  }),
+  onSnapshot: vi.fn((ref: Parameters<typeof firestoreState.snapshotFor>[0], next: (snap: unknown) => void) => {
+    next(firestoreState.snapshotFor(ref))
+    return vi.fn()
   }),
 }))
 

@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, onSnapshot, setDoc } from 'firebase/firestore'
 import type { AcademicCalendar, Holiday } from '../data/calendar'
 import { DEFAULT_CALENDAR, HOLIDAYS } from '../data/calendar'
 import { db } from './firebase'
@@ -20,6 +20,18 @@ export async function updateAcademicCalendar(calendar: AcademicCalendar): Promis
 export async function getHolidays(): Promise<Holiday[]> {
   const snapshot = await getDocs(collection(db, CONFIG_COLLECTION, HOLIDAYS_COLLECTION))
   return snapshot.docs.map((d) => d.data() as Holiday)
+}
+
+export function onAcademicCalendarSnapshot(
+  onData: (calendar: AcademicCalendar) => void,
+  onError?: (error: unknown) => void,
+): () => void {
+  return onSnapshot(
+    doc(db, CONFIG_COLLECTION, CALENDAR_DOC),
+    (snap) =>
+      onData(snap.exists() ? (snap.data() as AcademicCalendar) : DEFAULT_CALENDAR),
+    (error) => onError?.(error),
+  )
 }
 
 export async function seedConfig(): Promise<void> {

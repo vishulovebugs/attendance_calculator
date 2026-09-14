@@ -6,6 +6,7 @@ import {
   attendanceDocId,
   defaultStatus,
   getAttendanceForDate,
+  onAttendanceSnapshot,
   setAttendance,
   slotsForWeekday,
 } from './attendance'
@@ -13,24 +14,44 @@ import type { AttendanceRecord } from './attendance'
 
 const firestoreState = vi.hoisted(() => {
   const store = new Map<string, unknown>()
-  return { store }
+  return {
+    store,
+    snapshotFor(ref: { path: string; kind?: string }) {
+      if (ref.kind === 'doc') {
+        return {
+          exists: () => store.has(ref.path),
+          data: () => store.get(ref.path),
+        }
+      }
+      const prefix = `${ref.path}/`
+      return {
+        docs: [...store.entries()]
+          .filter(([p]) => p.startsWith(prefix))
+          .map(([p, data]) => ({ id: p.slice(prefix.length), data: () => data })),
+      }
+    },
+  }
 })
 
 vi.mock('firebase/app', () => ({ initializeApp: vi.fn(() => ({})) }))
 vi.mock('firebase/auth', () => ({ getAuth: vi.fn(() => ({})) }))
 vi.mock('firebase/firestore', () => ({
   getFirestore: vi.fn(() => ({})),
-  collection: vi.fn((_db: unknown, ...segments: string[]) => ({ path: segments.join('/') })),
-  doc: vi.fn((_db: unknown, ...segments: string[]) => ({ path: segments.join('/') })),
-  getDocs: vi.fn(async (ref: { path: string }) => {
-    const prefix = `${ref.path}/`
-    const docs = [...firestoreState.store.entries()]
-      .filter(([p]) => p.startsWith(prefix))
-      .map(([p, data]) => ({ id: p.slice(prefix.length), data: () => data }))
-    return { docs }
-  }),
+  collection: vi.fn((_db: unknown, ...segments: string[]) => ({
+    path: segments.join('/'),
+    kind: 'collection',
+  })),
+  doc: vi.fn((_db: unknown, ...segments: string[]) => ({
+    path: segments.join('/'),
+    kind: 'doc',
+  })),
+  getDocs: vi.fn(async (ref: { path: string }) => firestoreState.snapshotFor(ref)),
   setDoc: vi.fn(async (ref: { path: string }, data: unknown) => {
     firestoreState.store.set(ref.path, data)
+  }),
+  onSnapshot: vi.fn((ref: Parameters<typeof firestoreState.snapshotFor>[0], next: (snap: unknown) => void) => {
+    next(firestoreState.snapshotFor(ref))
+    return vi.fn()
   }),
 }))
 
@@ -221,5 +242,19 @@ describe('attendance store', () => {
     expect(results).toHaveLength(1)
     expect(results[0].status).toBe('Absent')
     expect(results[0].date).toBe('2026-09-14')
+  })
+
+  it('onAttendanceSnapshot emits the current records and returns an unsubscribe', () => {
+    firestoreState.store.set(
+      'users/u1/attendance/2026-09-14_Monday-09:00',
+      rec({ status: 'Absent' }),
+    )
+    const cb = vi.fn()
+    const unsub = onAttendanceSnapshot('u1', cb)
+    expect(cb).toHaveBeenCalledTimes(1)
+    const emitted = cb.mock.calls[0][0] as AttendanceRecord[]
+    expect(emitted).toHaveLength(1)
+    expect(emitted[0].status).toBe('Absent')
+    expect(typeof unsub).toBe('function')
   })
 })

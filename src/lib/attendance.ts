@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, setDoc } from 'firebase/firestore'
+import { collection, doc, getDocs, onSnapshot, setDoc } from 'firebase/firestore'
 import type { Holiday } from '../data/calendar'
 import type { Group } from '../types'
 import type { Day, SubjectType, TimetableEntry } from './timetable'
@@ -89,4 +89,16 @@ export async function setAttendance(
 ): Promise<void> {
   const id = attendanceDocId(record.date, record.slotId)
   await setDoc(doc(db, 'users', uid, 'attendance', id), record)
+}
+
+export function onAttendanceSnapshot(
+  uid: string,
+  onData: (records: AttendanceRecord[]) => void,
+  onError?: (error: unknown) => void,
+): () => void {
+  return onSnapshot(
+    collection(db, 'users', uid, 'attendance'),
+    (snapshot) => onData(snapshot.docs.map((d) => d.data() as AttendanceRecord)),
+    (error) => onError?.(error),
+  )
 }
