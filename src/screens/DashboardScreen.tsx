@@ -5,6 +5,7 @@ interface DashboardScreenProps {
   onOpenSettings?: () => void
   onOpenTimetable?: () => void
   onOpenAttendance?: () => void
+  onOpenStats?: () => void
 }
 
 export default function DashboardScreen({
@@ -12,6 +13,7 @@ export default function DashboardScreen({
   onOpenSettings,
   onOpenTimetable,
   onOpenAttendance,
+  onOpenStats,
 }: DashboardScreenProps) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
@@ -40,6 +42,15 @@ export default function DashboardScreen({
         </div>
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">
+          {onOpenStats ? (
+            <button
+              type="button"
+              onClick={onOpenStats}
+              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
+            >
+              Attendance stats
+            </button>
+          ) : null}
           {onOpenAttendance ? (
             <button
               type="button"

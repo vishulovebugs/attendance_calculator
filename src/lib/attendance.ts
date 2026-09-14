@@ -70,14 +70,17 @@ export function defaultStatus(
   return null
 }
 
+export async function getAttendance(uid: string): Promise<AttendanceRecord[]> {
+  const snapshot = await getDocs(collection(db, 'users', uid, 'attendance'))
+  return snapshot.docs.map((d) => d.data() as AttendanceRecord)
+}
+
 export async function getAttendanceForDate(
   uid: string,
   date: string,
 ): Promise<AttendanceRecord[]> {
-  const snapshot = await getDocs(collection(db, 'users', uid, 'attendance'))
-  return snapshot.docs
-    .map((d) => d.data() as AttendanceRecord)
-    .filter((r) => r.date === date)
+  const all = await getAttendance(uid)
+  return all.filter((r) => r.date === date)
 }
 
 export async function setAttendance(
