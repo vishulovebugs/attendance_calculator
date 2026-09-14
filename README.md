@@ -1,13 +1,13 @@
 # USICT Attendance
 
-PWA for attendance calculation for students of USICT. Built with Vite + React + TypeScript + Tailwind CSS, installable to home screen (no native build). Backend: Supabase (Auth + PostgreSQL).
+PWA for attendance calculation for students of USICT. Built with Vite + React + TypeScript + Tailwind CSS, installable to home screen (no native build). Backend: Firebase (Auth + Firestore).
 
 ## Stack
 
 - **Frontend**: Vite, React 19, TypeScript, Tailwind CSS v4
 - **PWA**: vite-plugin-pwa (manifest + service worker, Add to Home Screen)
 - **Testing**: Vitest + React Testing Library
-- **Backend (future)**: Supabase Auth + PostgreSQL
+- **Backend (future)**: Firebase Auth + Firestore
 - **Deploy**: Vercel
 
 ## Commands

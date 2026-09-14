@@ -1,0 +1,36 @@
+import type { UserProfile } from '../types'
+
+interface DashboardScreenProps {
+  profile: UserProfile
+}
+
+export default function DashboardScreen({ profile }: DashboardScreenProps) {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-md text-center">
+        <p className="text-sm font-medium text-indigo-600">Dashboard</p>
+        <h1 className="mt-1 text-3xl font-bold text-gray-900">
+          Welcome back, {profile.name}!
+        </h1>
+        <p className="mt-3 text-gray-600">
+          Your attendance tracker is on its way. Subjects, labs, and timetable
+          will show up here in upcoming phases.
+        </p>
+        <div className="mt-8 grid grid-cols-3 gap-3 text-left">
+          <div className="rounded-xl border border-gray-200 bg-white p-3">
+            <p className="text-xs text-gray-500">Branch</p>
+            <p className="mt-1 font-semibold text-gray-900">{profile.branch}</p>
+          </div>
+          <div className="rounded-xl border border-gray-200 bg-white p-3">
+            <p className="text-xs text-gray-500">Section</p>
+            <p className="mt-1 font-semibold text-gray-900">{profile.section}</p>
+          </div>
+          <div className="rounded-xl border border-gray-200 bg-white p-3">
+            <p className="text-xs text-gray-500">Group</p>
+            <p className="mt-1 font-semibold text-gray-900">{profile.group}</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  )
+}
