@@ -5,6 +5,7 @@ import { createProfile } from './lib/profile'
 import LoginScreen from './screens/LoginScreen'
 import OnboardingScreen from './screens/OnboardingScreen'
 import DashboardScreen from './screens/DashboardScreen'
+import SettingsScreen from './screens/SettingsScreen'
 
 function LoadingScreen({ label }: { label: string }) {
   return (
@@ -21,6 +22,7 @@ function App() {
   const { profile, loading } = useProfile(user?.uid ?? null)
   const [localProfile, setLocalProfile] = useState<UserProfile | null>(null)
   const [authError, setAuthError] = useState<string | null>(null)
+  const [view, setView] = useState<'dashboard' | 'settings'>('dashboard')
 
   useEffect(() => {
     if (user) {
@@ -62,7 +64,16 @@ function App() {
     )
   }
 
-  return <DashboardScreen profile={activeProfile} />
+  if (view === 'settings') {
+    return <SettingsScreen onBack={() => setView('dashboard')} />
+  }
+
+  return (
+    <DashboardScreen
+      profile={activeProfile}
+      onOpenSettings={() => setView('settings')}
+    />
+  )
 }
 
 export default App

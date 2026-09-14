@@ -2,9 +2,10 @@ import type { UserProfile } from '../types'
 
 interface DashboardScreenProps {
   profile: UserProfile
+  onOpenSettings?: () => void
 }
 
-export default function DashboardScreen({ profile }: DashboardScreenProps) {
+export default function DashboardScreen({ profile, onOpenSettings }: DashboardScreenProps) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md text-center">
@@ -30,6 +31,16 @@ export default function DashboardScreen({ profile }: DashboardScreenProps) {
             <p className="mt-1 font-semibold text-gray-900">{profile.group}</p>
           </div>
         </div>
+
+        {onOpenSettings ? (
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            className="mt-8 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+          >
+            Settings
+          </button>
+        ) : null}
       </div>
     </main>
   )
